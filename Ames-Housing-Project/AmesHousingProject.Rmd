@@ -130,7 +130,53 @@ curve(dnorm(x, mean=log_m, sd=log_std),
 
 plot(log_rd)
 ```
+We have a few high leverage residuals. Let's take a closer look.
 
-Testing very small change
+```{r Outlier Examination}
 
-Changing another thing!
+SortBySqFt <- C21[order(C21$GrLivArea, decreasing = TRUE),]
+head(SortBySqFt)
+
+# Wow! Two houses with >4000 square feet were sold for under $200k?? Either that's a mistake (like someone left out a zero) or I need the number of that real estate agent IMMEDIATELY so he can get me that kind of price on a mansion! If these two outliers are an valid observation, we may be looking at a short sale or foreclosure. Since these kinds of sales are not what Century 21 wants to measure, we feel confident in removing them from our dataset.
+
+# Save complete dataset as a separate object in case we need it later
+C21_full <- C21
+
+# Find rows with outlier data
+which(C21[ , 1] > 4000)
+
+# Those are the same datapoints highlighted in our Residuals vs Leverage plot, so let's remove them.
+C21 <- C21[-c(131,339),]
+```
+Now that we've removed the invalid data points, let's look again at the residuals.
+```{r Residuals after Removing Invalid Data}
+# Log-Log Model 
+
+log_rd <- lm(logprice ~ logLivArea, data = C21)
+log_g = log_rd$residuals
+log_m<-mean(log_g)
+log_std<-sqrt(var(log_g))
+hist(log_g, density=20, breaks=20, prob=TRUE, col="red",
+     xlab="Residuals",  
+     main="Residual Histogram with Normal Distribution")
+curve(dnorm(x, mean=log_m, sd=log_std), 
+      col="darkblue", lwd=2, add=TRUE, yaxt="n")
+
+plot(log_rd)
+```
+Now let's take another look at the fit
+```{r Refit Model}
+# Without Lines
+C21 %>% ggplot(aes(logLivArea, logprice, color = Neighborhood)) +
+  geom_point() +
+  ylab("Sale Price, log transformed") + 
+  xlab("Living Area Sq. Footage, log transformed") + 
+  ggtitle("Square Footage of Living Areas vs. Sales Price")
+
+# With Lines for each Neighborhood
+C21 %>% ggplot(aes(logLivArea, logprice, color = Neighborhood)) + 
+  geom_point() + geom_smooth(method = "lm") +
+  ylab("Sale Price, log transformed") + 
+  xlab("Living Area Sq. Footage, log transformed") + 
+  ggtitle("Square Footage of Living Areas vs. Sales Price")
+```
