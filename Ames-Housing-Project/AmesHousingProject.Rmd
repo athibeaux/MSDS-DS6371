@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(GGally)
+library(caret)
 ```
 
 Load Data
@@ -20,8 +21,8 @@ test = read.csv('https://github.com/athibeaux/MSDS-DDS/raw/main/Project/test.csv
 #Load Train Data
 train = read.csv('https://github.com/athibeaux/MSDS-DDS/raw/main/Project/train.csv', header = TRUE, fill = NA)
 
-#Head of Train Data
-head(train)
+#Summary of Train Data
+summary(train)
 
 #Select Relevant Columns and Neighborhoods for Analysis Question 1
 C21 = train %>% select(GrLivArea,Neighborhood,SalePrice) %>% filter(Neighborhood == "NAmes" | Neighborhood == "Edwards" | Neighborhood == "BrkSide")
@@ -200,4 +201,10 @@ C21 %>% ggplot(aes(logLivArea, logprice, color = Neighborhood)) +
   ylab("Sale Price, log transformed") + 
   xlab("Living Area Sq. Footage, log transformed") + 
   ggtitle("Square Footage of Living Areas vs. Sales Price")
+```
+Internal CV
+```{r Internal Cross Validation}
+# LOOCV method from library(caret)
+
+train(logprice ~ logLivArea, method = "lm", data = C21, trControl = trainControl(method = "LOOCV"))
 ```
