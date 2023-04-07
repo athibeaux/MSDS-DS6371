@@ -20,8 +20,8 @@ test = read.csv('https://github.com/athibeaux/MSDS-DDS/raw/main/Project/test.csv
 #Load Train Data
 train = read.csv('https://github.com/athibeaux/MSDS-DDS/raw/main/Project/train.csv', header = TRUE, fill = NA)
 
-#Summary of Train Data
-summary(train)
+#Head of Train Data
+head(train)
 
 #Select Relevant Columns and Neighborhoods for Analysis Question 1
 C21 = train %>% select(GrLivArea,Neighborhood,SalePrice) %>% filter(Neighborhood == "NAmes" | Neighborhood == "Edwards" | Neighborhood == "BrkSide")
@@ -30,7 +30,7 @@ C21$Neighborhood <- as.factor(C21$Neighborhood)
 summary(C21)
 
 #Check and Remove NA's
-sum(is.na(train$GrLIvArea))
+sum(is.na(C21$GrLIvArea))
 ```
 
 Checking Assumptions 
@@ -164,14 +164,35 @@ curve(dnorm(x, mean=log_m, sd=log_std),
 
 plot(log_rd)
 ```
-Now let's take another look at the fit
+Now let's take another look at the fits
 ```{r Refit Model}
+# Parameter Estimates
+# Overall
+fit = lm(logprice ~ logLivArea, data = C21)
+summary(fit)
+confint(fit)
+
 # Without Lines
 C21 %>% ggplot(aes(logLivArea, logprice, color = Neighborhood)) +
   geom_point() +
   ylab("Sale Price, log transformed") + 
   xlab("Living Area Sq. Footage, log transformed") + 
   ggtitle("Square Footage of Living Areas vs. Sales Price")
+
+# By Neighborhood
+fit_hoods = C21 %>% group_by(Neighborhood) %>% do(model = lm(logprice ~ logLivArea, data = .))
+
+# Brookside
+summary(fit_hoods[[2]][[1]])
+confint(fit_hoods[[2]][[1]])
+
+# Edwards
+summary(fit_hoods[[2]][[2]])
+confint(fit_hoods[[2]][[2]])
+
+# North Ames
+summary(fit_hoods[[2]][[3]])
+confint(fit_hoods[[2]][[3]])
 
 # With Lines for each Neighborhood
 C21 %>% ggplot(aes(logLivArea, logprice, color = Neighborhood)) + 
