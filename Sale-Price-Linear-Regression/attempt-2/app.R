@@ -6,8 +6,9 @@
 #
 #    http://shiny.rstudio.com/
 #
-library(rsconnect)
+
 library(shiny)
+library(tidyverse)
 library(ggplot2)
 train = read.csv('https://github.com/athibeaux/MSDS-DDS/raw/main/Project/train.csv', header = TRUE, fill = NA)
 C21 = train %>% select(GrLivArea,Neighborhood,SalePrice) %>% filter(Neighborhood == "NAmes" | Neighborhood == "Edwards" | Neighborhood == "BrkSide")
