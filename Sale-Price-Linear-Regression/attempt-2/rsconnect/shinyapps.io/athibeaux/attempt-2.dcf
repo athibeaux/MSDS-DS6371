@@ -1,0 +1,13 @@
+name: attempt-2
+title: attempt-2
+username:
+account: athibeaux
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8818828
+bundleId: 7075749
+url: https://athibeaux.shinyapps.io/attempt-2/
+when: 1681223304.5651
+lastSyncTime: 1681223304.56512
+asMultiple: FALSE
+asStatic: FALSE
