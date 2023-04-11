@@ -1,12 +1,13 @@
 ---
 title: "Ames_Housing_Data"
-author: "Thibeaux"
+author: "Burton-Cordova & Thibeaux"
 date: "2023-04-04"
-output: html_document
+output:
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, results = "hide", eval = FALSE)
 library(tidyverse)
 library(ggplot2)
 library(GGally)
@@ -14,7 +15,7 @@ library(caret)
 ```
 
 Load Data
-```{r}
+```{r Load Data, results='hide'}
 #Load Test Data
 test = read.csv('https://github.com/athibeaux/MSDS-DDS/raw/main/Project/test.csv', header = TRUE, fill = TRUE)
 
@@ -34,26 +35,24 @@ summary(C21)
 sum(is.na(C21$GrLIvArea))
 ```
 
-Checking Assumptions 
-		Residual Plots 
-		Influential point analysis (Cook’s D and Leverage)
-		Make sure to address each assumption.
+# Addressing Assumptions
 
-#Addressing Assumptions (Linearity, Variance, Normality, and Independence)
-
-#Linearity
-```{r Linearity Assumption}
+## Linearity
+```{r Linearity Assumption, results='hide'}
 # Without Lines
 C21 %>% ggplot(aes(GrLivArea, SalePrice, color = Neighborhood)) + geom_point() +
+  xlab("Living Area in 100 Sq. Feet") + ylab("Sale Price") +
   ggtitle("Square Footage of Living Areas vs. Sales Price")
 
 # With Lines for each Neighborhood
 C21 %>% ggplot(aes(GrLivArea, SalePrice, color = Neighborhood)) + geom_point() +
-  geom_smooth(method = "lm") + ggtitle("Square Footage of Living Areas vs. Sales Price")
+  geom_smooth(method = "lm") + 
+  xlab("Living Area in 100 Sq. Feet") + ylab("Sale Price") +
+  ggtitle("Square Footage of Living Areas vs. Sales Price")
 ```
 
-# Normality
-```{r Normality Assumption}
+## Normality
+```{r Normality Assumption, results='hide'}
 ggpairs(C21)
 
 # Histogram for Sale Price
@@ -78,6 +77,7 @@ C21$logLivArea = log(C21$GrLivArea)
 
 # Histogram for Log-Transformed Living Area Square Footage
 C21 %>% ggplot() + geom_histogram(aes(x = logLivArea)) +
+  xlab("Living Area, log-transformed") +
   ggtitle("Distribution of log-transformed Living Area Square Footage")
 
 # QQ Plot for Log-Transformed Living Area Square Footage
@@ -88,8 +88,9 @@ C21 %>% ggplot() + geom_qq(aes(sample = logLivArea)) +
 # Log Transformation on Sale Price
 C21$logprice = log(C21$SalePrice)
 
-# Histogram for Log-Transformed Living Area Square Footage
+# Histogram for Log-Transformed Sale Price
 C21 %>% ggplot() + geom_histogram(aes(x = logprice)) +
+  xlab("Sale Price, log-transformed")
   ggtitle("Distribution of log-transformed Sale Price")
 
 # QQ Plot for Log-Transformed Living Area Square Footage
@@ -100,8 +101,8 @@ C21 %>% ggplot() + geom_qq(aes(sample = logprice)) +
 
 ```
 
-# Equal Variance
-```{r Equal Variance}
+## Equal Variance
+```{r Equal Variance Assumption, results='hide'}
 # Non Transformed Data
 rd <- lm(SalePrice ~ GrLivArea, data = C21)
 g = rd$residuals
@@ -113,9 +114,10 @@ hist(g, density=20, breaks=20, prob=TRUE, col="red",
 curve(dnorm(x, mean=m, sd=std), 
       col="darkblue", lwd=2, add=TRUE, yaxt="n")
 
+# Display residual plots for non-transformed data
 plot(rd)
 
-# Notice cluster effect of residuals...
+# Notice cluster effect of residuals!
 
 # Log-Log Model 
 
@@ -129,12 +131,13 @@ hist(log_g, density=20, breaks=20, prob=TRUE, col="red",
 curve(dnorm(x, mean=log_m, sd=log_std), 
       col="darkblue", lwd=2, add=TRUE, yaxt="n")
 
+# Display residual plots for log-transformed data
 plot(log_rd)
 ```
 We have a few high leverage residuals. Let's take a closer look.
 
-```{r Outlier Examination}
-
+```{r Outlier Examination, results='hide'}
+# Examine the largest values in the explanatory variable
 SortBySqFt <- C21[order(C21$GrLivArea, decreasing = TRUE),]
 head(SortBySqFt)
 
@@ -150,7 +153,7 @@ which(C21[ , 1] > 4000)
 C21 <- C21[-c(131,339),]
 ```
 Now that we've removed the invalid data points, let's look again at the residuals.
-```{r Residuals after Removing Invalid Data}
+```{r Residuals after Removing Invalid Data, results='hide'}
 # Log-Log Model 
 
 log_rd <- lm(logprice ~ logLivArea, data = C21)
@@ -163,10 +166,11 @@ hist(log_g, density=20, breaks=20, prob=TRUE, col="red",
 curve(dnorm(x, mean=log_m, sd=log_std), 
       col="darkblue", lwd=2, add=TRUE, yaxt="n")
 
+# Display new residual plots
 plot(log_rd)
 ```
 Now let's take another look at the fits
-```{r Refit Model}
+```{r Refit Model, results='hide'}
 # Parameter Estimates
 # Overall
 fit = lm(logprice ~ logLivArea, data = C21)
@@ -195,6 +199,13 @@ confint(fit_hoods[[2]][[2]])
 summary(fit_hoods[[2]][[3]])
 confint(fit_hoods[[2]][[3]])
 
+# With Regression Line
+C21 %>% ggplot(aes(logLivArea, logprice)) + 
+  geom_point() + geom_smooth(method = "lm") +
+  ylab("Sale Price, log transformed") + 
+  xlab("Living Area Sq. Footage, log transformed") + 
+  ggtitle("Square Footage of Living Areas vs. Sales Price")
+
 # With Lines for each Neighborhood
 C21 %>% ggplot(aes(logLivArea, logprice, color = Neighborhood)) + 
   geom_point() + geom_smooth(method = "lm") +
@@ -202,9 +213,78 @@ C21 %>% ggplot(aes(logLivArea, logprice, color = Neighborhood)) +
   xlab("Living Area Sq. Footage, log transformed") + 
   ggtitle("Square Footage of Living Areas vs. Sales Price")
 ```
-Internal CV
-```{r Internal Cross Validation}
-# LOOCV method from library(caret)
+# Compare competing models
+## Fit on non-transformed data
+```{r Competing Models, results='hide'}
+# Fit on non-transformed data
+# Parameter Estimates
+# Overall
+fit = lm(SalePrice ~ GrLivArea, data = C21)
+summary(fit)
+confint(fit)
+
+# Without Lines
+C21 %>% ggplot(aes(GrLivArea, SalePrice, color = Neighborhood)) +
+  geom_point() +
+  ylab("Sale Price") + 
+  xlab("Living Area Sq. Footage") + 
+  ggtitle("Square Footage of Living Areas vs. Sales Price")
+
+# By Neighborhood
+fit_hoods = C21 %>% group_by(Neighborhood) %>% do(model = lm(SalePrice ~ GrLivArea, data = .))
+
+# Brookside
+summary(fit_hoods[[2]][[1]])
+confint(fit_hoods[[2]][[1]])
+
+# Edwards
+summary(fit_hoods[[2]][[2]])
+confint(fit_hoods[[2]][[2]])
+
+# North Ames
+summary(fit_hoods[[2]][[3]])
+confint(fit_hoods[[2]][[3]])
+
+# With Lines for each Neighborhood
+C21 %>% ggplot(aes(GrLivArea, SalePrice, color = Neighborhood)) + 
+  geom_point() + geom_smooth(method = "lm") +
+  ylab("Sale Price") + 
+  xlab("Living Area Sq. Footage") + 
+  ggtitle("Square Footage of Living Areas vs. Sales Price")
+```
+## Hold Neighborhood Constant
+
+```{r Model holding neighborhood constant, results='hide'}
+
+# Transformed Data
+fit = lm(logprice ~ logLivArea + Neighborhood, data = C21)
+summary(fit)
+confint(fit)
+
+# Raw Data
+fit = lm(SalePrice ~ GrLivArea + Neighborhood, data = C21)
+summary(fit)
+confint(fit)
+
+```
+
+## Internal CV as a measure for competing models
+
+```{r Internal Cross Validation, results='hide'}
+# LOOCV method from library(caret), transformed data
 
 train(logprice ~ logLivArea, method = "lm", data = C21, trControl = trainControl(method = "LOOCV"))
+
+# LOOCV method from library(caret), raw data
+
+train(SalePrice ~ GrLivArea, method = "lm", data = C21, trControl = trainControl(method = "LOOCV"))
+
+# LOOCV method from library(caret), transformed data, holding Neighborhood constant
+
+train(logprice ~ logLivArea + Neighborhood, method = "lm", data = C21, trControl = trainControl(method = "LOOCV"))
+
+# LOOCV method from library(caret), raw data, holding Neighborhood constant
+
+train(SalePrice ~ GrLivArea + Neighborhood, method = "lm", data = C21, trControl = trainControl(method = "LOOCV"))
 ```
+
